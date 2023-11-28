@@ -3,6 +3,8 @@ const c = document.querySelector("canvas");
 const ctx = c.getContext("2d");
 const output = document.querySelector("p");
 const button = document.getElementById("button");
+c.width = 512;
+c.height = 512;
 
 class Vector {
     constructor(x = 0, y = 0) {
@@ -195,11 +197,33 @@ const pWall = [];
 // const wr = new Rectangle(1 - thicknessWall, 0, thicknessWall, 1);
 // createParticle(pWall, wr);
 
-const canvasWidth = 512;
-const canvasHeight = 512;
-const minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
-const maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
-const pageOffsetLeft = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+const canvasWidth = c.width;
+const canvasHeight = c.height;
+let minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
+let maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
+let pageOffset = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+let pageOffsetTop, pageOffsetLeft = 0;
+if (window.innerWidth > window.innerHeight) {
+    pageOffsetTop = 0;
+    pageOffsetLeft = pageOffset;
+} else {
+    pageOffsetTop = pageOffset;
+    pageOffsetLeft = 0;
+}
+
+window.addEventListener("resize", function () {
+    minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
+    maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
+    pageOffset = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+    pageOffsetTop, pageOffsetLeft = 0;
+    if (window.innerWidth > window.innerHeight) {
+        pageOffsetTop = 0;
+        pageOffsetLeft = pageOffset;
+    } else {
+        pageOffsetTop = pageOffset;
+        pageOffsetLeft = 0;
+    }
+})
 let isRun = false;
 
 let mouse = {
