@@ -5,15 +5,43 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fluid_Simulation</title>
-    <link rel="stylesheet" href="../style.css">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <canvas></canvas>
+    <canvas id="gl"></canvas>
     <p></p>
 </body>
 
 </html>
-<script src="../stats.min.js"></script>
-<script src="drawGPU.min.js"></script>
+
+<script id="vs" type="x-shader/x-vertex">#version 300 es
+precision highp float;
+in vec2 position;
+in vec2 a_texCoord;
+uniform float isFlip;
+
+out vec2 v_texCoord;
+
+void main() {
+    gl_Position = vec4(((position) * 2.0 - 1.0), 0.0, 1.0);
+    v_texCoord = a_texCoord;
+    gl_PointSize = 4.0;
+}
+</script>
+
+<script id="fs" type="x-shader/x-fragment">#version 300 es
+precision highp float;
+
+in vec2 v_texCoord;
+out vec4 outColor;
+
+void main() {
+    outColor = vec4(0, 0, 1, 1);
+}
+
+</script>
+
+<script src="stats.min.js"></script>
+<script src="script.js"></script>
