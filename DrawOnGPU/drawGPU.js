@@ -1,6 +1,6 @@
 "use strict"
 
-const c = document.getElementById("gl");
+const c = document.querySelector("canvas");
 const gl = c.getContext("webgl2")
 console.log(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
 console.log(gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS));
