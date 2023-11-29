@@ -2,11 +2,12 @@
 
 const c = document.querySelector("canvas");
 const gl = c.getContext("webgl2")
-console.log(gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS));
-console.log(gl.getParameter(gl.MAX_ARRAY_TEXTURE_LAYERS));
 
 const output = document.querySelector("p");
 
+const pImgSrc = "data:image/png;base64,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";
+const pImg = new Image();
+pImg.src = pImgSrc;
 
 // ここから流体計算
 
@@ -157,7 +158,7 @@ const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
-const particleSize = 0.02;
+const particleSize = 0.025;
 const h = particleSize * 1.5;
 const stiffness = 100;
 const density0 = 1000;
@@ -168,17 +169,17 @@ const grv = new Vector(0, -9.8);
 const regionAll = new Rectangle(0, 0, 1, 1);
 const cell = new Cell(regionAll, h);
 let time = 0;
-const timeDelta = particleSize * 0.125;
+const timeDelta = particleSize * 0.115;
 // const iterationNum = Math.floor((1 / 60) / timeDelta);
 const iterationNum = 4;
-const grabScale = 8;
+const grabScale = 6;
 const grabRange = grabScale * cell.h, grabRange2 = grabRange * grabRange, range = grabScale * 2 + 1, loopNum = grabScale;
 const p = [];
 const particles = new Rectangle(0, 0, 0.5, 0.8);
 createParticle(p, particles);
 
-c.width = 512;
-c.height = 512;
+c.width = 128;
+c.height = 128;
 const canvasWidth = c.width;
 const canvasHeight = c.height;
 let minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
@@ -428,16 +429,29 @@ function GLCreateProgram(vertexshader, fragmentshader) {
     gl.deleteProgram(program);
 }
 
-// function GLCreateTexture() {
-//     const t = gl.createTexture();
-//     gl.bindTexture(gl.TEXTURE_2D, t);
+function GLCreateTexture() {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
 
-//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-//     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-//     return t;
+    return t;
+}
+
+// function createFrameBuffer(w, h) {
+//     const texture = GLCreateTexture();
+
+//     const framebuffer = gl.createFramebuffer();
+//     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+//     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+//     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+
+//     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+//     return { f: framebuffer, t: texture };
 // }
 
 function setVAO(posAttribLocation, texAttribLocation, isDynamic) {
@@ -456,65 +470,71 @@ function setVAO(posAttribLocation, texAttribLocation, isDynamic) {
     return VAO;
 }
 
-// function createFrameBuffer(w, h) {
-//     const texture = GLCreateTexture();
 
-//     const framebuffer = gl.createFramebuffer();
-//     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-
-//     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-//     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-
-//     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-//     return { f: framebuffer, t: texture };
-// }
-
-gl.enable(gl.DEPTH_TEST);
-gl.enable(gl.TEXTURE_2D);
+gl.enable(gl.BLEND);
 const vertexshader = GLCreateShader(gl.VERTEX_SHADER, vertexshadersource.innerHTML);
 const fragmentshader = GLCreateShader(gl.FRAGMENT_SHADER, fragmentshadersource.innerHTML);
 const prg = GLCreateProgram(vertexshader, fragmentshader);
 const Positions = new Float32Array(p.length * 2);
-gl.clearColor(0.0, 0.0, 0.0, 0.0);
-gl.viewport(0, 0, c.width, c.height);
 gl.useProgram(prg);
+const pTex = GLCreateTexture();
 const posAttribLocation = gl.getAttribLocation(prg, "position");
 const texAttribLocation = gl.getAttribLocation(prg, "a_texCoord");
 uniLocation[0] = gl.getUniformLocation(prg, "u_image");
-uniLocation[1] = gl.getUniformLocation(prg, "isFlip");
+// uniLocation[1] = gl.getUniformLocation(prg, "isFlip");
 gl.uniform1i(uniLocation[0], 0);
 gl.uniform1f(uniLocation[1], -1);
+gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, pImg);
+gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE);
 const VAO = setVAO(posAttribLocation, texAttribLocation, true);
 gl.bindVertexArray(VAO);
+gl.clearColor(0.0, 0.0, 0.0, 0.0);
+gl.viewport(0, 0, c.width, c.height);
 const PointNum = Positions.length;
+let ms = new Array(10);
+let t = 0;
 
 function render() {
     stats.begin();
+    // const sTime = performance.now();
 
-    // 流体の計算
-    update(iterationNum);
-    if (mouse.isPressed) {
-        grabParticles();
-    }
-    
     gl.clear(gl.COLOR_BUFFER_BIT);
-    
-    gl.uniform1i(uniLocation[0], 0);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, pTex);
     gl.uniform1f(uniLocation[1], 1);
-    
+    gl.uniform1i(uniLocation[0], 0);
+
     for (let i = 0, j = PointNum; i < j; i += 2) {
         Positions[i] = p[i / 2].position.x;
         Positions[i + 1] = p[i / 2].position.y;
     }
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, Positions);
     gl.drawArrays(gl.POINTS, 0, PointNum);
-    
+
     gl.flush();
-    
+    // 流体の計算
+    update(iterationNum);
+    if (mouse.isPressed) {
+        grabParticles();
+    }
+
     stats.end();
+
+    // const eTime = performance.now();
+    // let sum = 0;
+    // ms.shift();
+    // ms.push(eTime - sTime);
+    // t++
+    // if (!(t % 60)) {
+
+    //     ms.forEach((num) => {
+    //         sum += num;
+    //     })
+    //     output.innerHTML = ((sum / 10).toFixed(2)) + "ms";
+    // }
 
     requestAnimationFrame(render);
 }
-
 
 render();
