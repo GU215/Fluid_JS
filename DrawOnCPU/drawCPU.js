@@ -3,8 +3,6 @@ const c = document.querySelector("canvas");
 const ctx = c.getContext("2d");
 const output = document.querySelector("p");
 const button = document.getElementById("button");
-c.width = 512;
-c.height = 512;
 
 class Vector {
     constructor(x = 0, y = 0) {
@@ -27,12 +25,6 @@ class Vector {
         this.y += v.y;
         return this;
     }
-
-    // sub(v) {
-    //     this.x -= v.x;
-    //     this.y -= v.y;
-    //     return this;
-    // }
 
     sub(v) {
         return new Vector(this.x - v.x, this.y - v.y);
@@ -57,12 +49,12 @@ class Particle {
         this.force = new Vector();
         this.pressure = 0;
         this.density = 0;
-        this.active = true;
+        // this.active = true;
     }
 
-    remove() {
-        this.active = false;
-    }
+    // remove() {
+    //     this.active = false;
+    // }
 
     indexX(cell) {
         return Math.floor((this.position.x - cell.region.left) / cell.h);
@@ -106,7 +98,6 @@ class Cell {
         this.ny = Math.ceil(region.height / this.h);
         this.bucket = new Array(this.nx * this.ny);
         this.region = region;
-        this.maxIndex = this.nx * this.ny;
     }
 
     clear() {
@@ -117,10 +108,7 @@ class Cell {
 
     add(p) {
         for (let i = 0, n = p.length; i < n; i++) {
-            if (!p[i].active) continue;
-            const cellPos = p[i].indexCell(this);
-            // if(0 < cellPos || cellPos > this.maxIndex) continue;
-            this.bucket[cellPos].push(p[i]);
+            this.bucket[p[i].indexCell(this)].push(p[i]);
         }
     }
 }
@@ -174,42 +162,26 @@ const massParticle = particleSize * particleSize * density0;
 const w = new Kernel(h);
 const grv = new Vector(0, -9.8);
 const regionAll = new Rectangle(0, 0, 1, 1);
-const thicknessWall = particleSize * 1;
 const cell = new Cell(regionAll, h);
 let time = 0;
-const timeDelta = particleSize * 0.13;
+const timeDelta = particleSize * 0.125;
 // const iterationNum = Math.floor((1 / 60) / timeDelta);
 const iterationNum = 4;
-const grabScale = 4;
+const grabScale = 6;
 const grabRange = grabScale * cell.h;
 const grabRange2 = grabRange * grabRange
 const range = grabScale * 2 + 1, loopNum = grabScale;
 const p = [];
-const regionInitial = new Rectangle(thicknessWall, thicknessWall, 0.4, 0.8);
-createParticle(p, regionInitial);
-const pWall = [];
-// const wb = new Rectangle(0, 0, 1, thicknessWall);
-// createParticle(pWall, wb);
-// const wt = new Rectangle(0, 1 - thicknessWall, 1, thicknessWall);
-// createParticle(pWall, wt);
-// const wl = new Rectangle(0, 0, thicknessWall, 1);
-// createParticle(pWall, wl);
-// const wr = new Rectangle(1 - thicknessWall, 0, thicknessWall, 1);
-// createParticle(pWall, wr);
+const particles = new Rectangle(0.25, 0, 0.5, 0.8);
+createParticle(p, particles);
 
-const canvasWidth = c.width;
-const canvasHeight = c.height;
-let minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
-let maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
-let pageOffset = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
-let pageOffsetTop, pageOffsetLeft = 0;
-if (window.innerWidth > window.innerHeight) {
-    pageOffsetTop = 0;
-    pageOffsetLeft = pageOffset;
-} else {
-    pageOffsetTop = pageOffset;
-    pageOffsetLeft = 0;
-}
+const canvasWidth = 512;
+const canvasHeight = 512;
+c.width = canvasWidth;
+c.height = canvasHeight;
+const minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
+const maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
+const pageOffsetLeft = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
 
 window.addEventListener("resize", function () {
     minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
@@ -224,7 +196,12 @@ window.addEventListener("resize", function () {
         pageOffsetLeft = 0;
     }
 })
+
 let isRun = false;
+
+const cellt = cell.h * canvasHeight;
+const celll = cell.h * canvasWidth;
+// const cellSize = cell.h * c.width;
 
 let mouse = {
     eventTarget: null,
@@ -234,16 +211,6 @@ let mouse = {
     fy: 0,
     isPressed: false
 }
-
-output.innerHTML = "particleSize : " + particleSize + "<br>" +
-    "particleNum : " + (p.length + pWall.length) + "<br>" +
-    "canvasSize : " + canvasWidth + "<br>" +
-    "timeStepLength : " + timeDelta + "<br>" +
-    "iterationNum : " + iterationNum + "<br>" +
-    "restDensity : " + density0 + "<br>" +
-    "viscosity : " + viscosity + "<br>" +
-    "massParticle : " + massParticle + "<br>" +
-    "gravity : Vec2(x : " + grv.x + ", y : " + grv.y + ")";
 
 c.addEventListener("mousedown", function (e) {
     e.preventDefault();
@@ -305,7 +272,6 @@ function createParticle(p, region) {
 function setParticleToCell() {
     cell.clear();
     cell.add(p);
-    cell.add(pWall);
 }
 
 function densityPressure() {
@@ -313,7 +279,7 @@ function densityPressure() {
     // 周囲と自分の密度が一定になるようにする 
     function calcDP(p) {
         for (let i = 0, n = p.length; i < n; i++) {
-            if (!p[i].active) continue;
+            //if (!p[i].active) continue;
 
             let density = 0;
             p[i].forNeighbor(cell, function (pNeighbor, rv) {
@@ -326,12 +292,11 @@ function densityPressure() {
     };
 
     calcDP(p);
-    calcDP(pWall);
 }
 
 function particleForce() {
     for (let i = 0, n = p.length; i < n; i++) {
-        if (!p[i].active) continue;
+        //if (!p[i].active) continue;
 
         let force = new Vector();
 
@@ -375,7 +340,7 @@ function update(iterNum) {
         particleForce();
 
         for (let i = 0, n = p.length; i < n; i++) {
-            if (!p[i].active) continue;
+            //if (!p[i].active) continue;
             p[i].velocity2.x += p[i].force.x * timeDelta;
             p[i].velocity2.y += p[i].force.y * timeDelta;
                         
@@ -413,12 +378,13 @@ function draw() {
     ctx.clearRect(0, 0, c.width, c.height);
     function drawArc(p, scale, d) {
         for (let i = 0, n = p.length; i < n; i++) {
-            if(!p[i].active) continue;
+            // if(!p[i].active) continue;
+            const arcSize = d / 4;
             const x = (p[i].position.x - regionAll.left) * scale;
             const y = canvasHeight - (p[i].position.y - regionAll.bottom) * scale;
-            ctx.fillStyle = "hsl(" + (p[i].pressure / 50 + 220) + ", 100%, 50%)";
+            ctx.fillStyle = "hsl(" + (220 - p[i].pressure / 100) + ", 80%, 40%)";
             ctx.beginPath();
-            ctx.arc(x, y, d / 2, 0, Math.PI * 2);
+            ctx.arc(x, y, arcSize, 0, Math.PI * 2);
             ctx.fill();
             // ctx.fillRect(x - d / 2, y - d / 2, d, d)
             ctx.closePath();
@@ -438,17 +404,11 @@ function run() {
 function reset() {
     isRun = false;
     time = 0;
-    // initializeParticle();
-    ctx.fillStyle = "blue"
-
-    draw();
+    ctx.fillStyle = "blue";
     run();
 }
 
 function setup() {
-    // setParameter();
-    c.width = canvasWidth;
-    c.height = canvasHeight;
     reset();
 }
 
@@ -468,37 +428,23 @@ function grabParticles() {
                 const dy = mouse.y - pNeighbor.position.y;
                 if (dx * dx + dy * dy > grabRange2) continue;
                 // pNeighbor.remove()
-                const vacuumVector = new Vector(dx, dy)
-                vacuumVector.times(iterationNum );
+                const vacuumVector = new Vector(dx, dy);
+                vacuumVector.times(iterationNum *1);
                 pNeighbor.velocity2.add(vacuumVector);
             }
         }
     }
-    // p[0].position.x = mouse.x;
-    // p[0].position.y = mouse.y;
 }
 
-let ms = new Array(10);
 function render() {
-    if (isRun) {
         stats.begin();
-        // const sTime = performance.now();
         update(iterationNum);
         if (mouse.isPressed) {
             grabParticles();
         }
         draw();
-        // const eTime = performance.now();
-        // let sum = 0;
-        // ms.shift();
-        // ms.push(eTime - sTime);
-        // ms.forEach((num) => {
-        //     sum += num;
-        // })
-        // output.innerHTML = ((sum / 10).toFixed(2)) + "ms";
 
         stats.end();
-    }
     requestAnimationFrame(render);
 };
 
