@@ -25,7 +25,7 @@ class Vector {
         this.y += v.y;
         return this;
     }
-
+    
     sub(v) {
         return new Vector(this.x - v.x, this.y - v.y);
     }
@@ -153,6 +153,15 @@ const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);
 
+const canvasWidth = 512;
+const canvasHeight = 512;
+c.width = canvasWidth;
+c.height = canvasHeight;
+const minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
+const maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
+const pageOffsetLeft = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+let isRun = false;
+
 const particleSize = 0.02;
 const h = particleSize * 1.5;
 const stiffness = 100;
@@ -162,45 +171,29 @@ const massParticle = particleSize * particleSize * density0;
 const w = new Kernel(h);
 const grv = new Vector(0, -9.8);
 const regionAll = new Rectangle(0, 0, 1, 1);
+// const thicknessWall = particleSize * 1;
 const cell = new Cell(regionAll, h);
+const cellt = cell.h * canvasHeight;
+const celll = cell.h * canvasWidth;
 let time = 0;
 const timeDelta = particleSize * 0.125;
 // const iterationNum = Math.floor((1 / 60) / timeDelta);
 const iterationNum = 4;
 const grabScale = 6;
+const grabScaleRange = grabScale * cell.h * c.height;
 const grabRange = grabScale * cell.h;
 const grabRange2 = grabRange * grabRange
 const range = grabScale * 2 + 1, loopNum = grabScale;
 const p = [];
-const particles = new Rectangle(0.25, 0, 0.5, 0.8);
+const particles = new Rectangle(0, 0, 0.5, 0.8);
 createParticle(p, particles);
+const simLeft = particleSize;
+const simRight = 1 - particleSize;
+const simTop = 1 - particleSize;
+const simBottom = particleSize;
 
-const canvasWidth = 512;
-const canvasHeight = 512;
-c.width = canvasWidth;
-c.height = canvasHeight;
-const minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
-const maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
-const pageOffsetLeft = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+let flipForce = 1;
 
-window.addEventListener("resize", function () {
-    minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
-    maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
-    pageOffset = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
-    pageOffsetTop, pageOffsetLeft = 0;
-    if (window.innerWidth > window.innerHeight) {
-        pageOffsetTop = 0;
-        pageOffsetLeft = pageOffset;
-    } else {
-        pageOffsetTop = pageOffset;
-        pageOffsetLeft = 0;
-    }
-})
-
-let isRun = false;
-
-const cellt = cell.h * canvasHeight;
-const celll = cell.h * canvasWidth;
 // const cellSize = cell.h * c.width;
 
 let mouse = {
@@ -209,8 +202,19 @@ let mouse = {
     y: 0,
     fx: 0,
     fy: 0,
-    isPressed: false
+    isPressed: false,
+    isRightClick: false
 }
+
+output.innerHTML = "particleSize : " + particleSize + "<br>" +
+    "particleNum : " + (p.length) + "<br>" +
+    "canvasSize : " + canvasWidth + "<br>" +
+    "timeStepLength : " + timeDelta + "<br>" +
+    "iterationNum : " + iterationNum + "<br>" +
+    "restDensity : " + density0 + "<br>" +
+    "viscosity : " + viscosity + "<br>" +
+    "massParticle : " + massParticle + "<br>" +
+    "gravity : Vec2(x : " + grv.x + ", y : " + grv.y + ")";
 
 c.addEventListener("mousedown", function (e) {
     e.preventDefault();
@@ -235,6 +239,10 @@ c.addEventListener("touchmove", function (e) {
 c.addEventListener("touchend", function (e) {
     e.preventDefault();
     mUp();
+})
+c.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+    flipForce = -flipForce;
 })
 function mDown(m) {
     mouse.x = m.pageX / minWindowWidth - pageOffsetLeft;
@@ -272,6 +280,7 @@ function createParticle(p, region) {
 function setParticleToCell() {
     cell.clear();
     cell.add(p);
+    // cell.add(pWall);
 }
 
 function densityPressure() {
@@ -292,6 +301,7 @@ function densityPressure() {
     };
 
     calcDP(p);
+    // calcDP(pWall);
 }
 
 function particleForce() {
@@ -343,30 +353,18 @@ function update(iterNum) {
             //if (!p[i].active) continue;
             p[i].velocity2.x += p[i].force.x * timeDelta;
             p[i].velocity2.y += p[i].force.y * timeDelta;
-                        
+
             p[i].position.x += p[i].velocity2.x * timeDelta;
             p[i].position.y += p[i].velocity2.y * timeDelta;
-            
-            if (p[i].position.y - particleSize < regionAll.bottom) {
-                p[i].position.y = particleSize;
-                p[i].velocity2.y *= -1;
-                p[i].force.y *= -1;
+
+            if (p[i].position.y < simBottom || p[i].position.y > simTop) {
+                p[i].velocity2.y = -p[i].velocity2.y;
             }
-            if (p[i].position.y + particleSize > regionAll.top) {
-                p[i].position.y = 1 - particleSize;
-                p[i].velocity2.y *= -1;
-                p[i].force.y *= -1;
+            if (p[i].position.x < simLeft || p[i].position.x > simRight) {
+                p[i].velocity2.x = -p[i].velocity2.x;
             }
-            if (p[i].position.x - particleSize < regionAll.left) {
-                p[i].position.x = particleSize;
-                p[i].velocity2.x *= -1;
-                p[i].force.x *= -1;
-            }
-            if (p[i].position.x + particleSize > regionAll.right) {
-                p[i].position.x = 1 - particleSize;
-                p[i].velocity2.x *= -1;
-                p[i].force.x *= -1;
-            }            
+            p[i].position.x = Math.min(simRight, Math.max(p[i].position.x, simLeft));
+            p[i].position.y = Math.min(simTop, Math.max(p[i].position.y, simBottom));
 
             p[i].velocity.x = p[i].velocity2.x + 0.5 * p[i].force.x * timeDelta;
             p[i].velocity.y = p[i].velocity2.y + 0.5 * p[i].force.y * timeDelta;
@@ -375,7 +373,6 @@ function update(iterNum) {
 }
 
 function draw() {
-    ctx.clearRect(0, 0, c.width, c.height);
     function drawArc(p, scale, d) {
         for (let i = 0, n = p.length; i < n; i++) {
             // if(!p[i].active) continue;
@@ -394,7 +391,9 @@ function draw() {
     const scale = canvasWidth / regionAll.width;
     const d = particleSize * scale;
 
+    ctx.fillStyle = "#00FFFF";
     drawArc(p, scale, d);
+
 }
 
 function run() {
@@ -404,7 +403,8 @@ function run() {
 function reset() {
     isRun = false;
     time = 0;
-    ctx.fillStyle = "blue";
+    ctx.fillStyle = "blue"
+
     run();
 }
 
@@ -427,24 +427,37 @@ function grabParticles() {
                 const dx = mouse.x - pNeighbor.position.x;
                 const dy = mouse.y - pNeighbor.position.y;
                 if (dx * dx + dy * dy > grabRange2) continue;
-                // pNeighbor.remove()
                 const vacuumVector = new Vector(dx, dy);
-                vacuumVector.times(iterationNum *1);
+                vacuumVector.times(iterationNum * 0.5 * flipForce);
                 pNeighbor.velocity2.add(vacuumVector);
             }
         }
     }
 }
 
+let ms = new Array(20);
 function render() {
-        stats.begin();
-        update(iterationNum);
-        if (mouse.isPressed) {
-            grabParticles();
-        }
-        draw();
+    stats.begin();
+    ctx.clearRect(0, 0, c.width, c.height);
 
-        stats.end();
+    update(iterationNum);
+    if (mouse.isPressed) {
+        grabParticles();
+
+        ctx.beginPath();
+        if (flipForce == 1) {
+            ctx.strokeStyle = "#22BC46";
+        } else {
+            ctx.strokeStyle = "#B92121";
+        }
+        ctx.lineWidth = 1;
+        ctx.arc(mouse.x * c.width, c.height * (1 - mouse.y), grabScaleRange, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.closePath();
+    }
+    draw();
+
+    stats.end();
     requestAnimationFrame(render);
 };
 
