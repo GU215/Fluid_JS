@@ -157,9 +157,17 @@ const canvasWidth = 512;
 const canvasHeight = 512;
 c.width = canvasWidth;
 c.height = canvasHeight;
-const minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
-const maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
-const pageOffsetLeft = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+let minWindowWidth = Math.min(window.innerWidth, window.innerHeight);
+let maxWindowWidth = Math.max(window.innerWidth, window.innerHeight);
+let pageOffset = ((maxWindowWidth - minWindowWidth) / 2) / minWindowWidth;
+let pageOffsetTop, pageOffsetLeft = 0;
+if (window.innerWidth > window.innerHeight) {
+    pageOffsetTop = 0;
+    pageOffsetLeft = pageOffset;
+} else {
+    pageOffsetTop = pageOffset;
+    pageOffsetLeft = 0;
+}
 let isRun = false;
 
 const particleSize = 0.02;
@@ -185,7 +193,7 @@ const grabRange = grabScale * cell.h;
 const grabRange2 = grabRange * grabRange
 const range = grabScale * 2 + 1, loopNum = grabScale;
 const p = [];
-const particles = new Rectangle(0, 0, 0.5, 0.8);
+const particles = new Rectangle(0.25, 0, 0.5, 0.8);
 createParticle(p, particles);
 const simLeft = particleSize;
 const simRight = 1 - particleSize;
