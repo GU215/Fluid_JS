@@ -193,8 +193,10 @@ const grabRange = grabScale * cell.h;
 const grabRange2 = grabRange * grabRange
 const range = grabScale * 2 + 1, loopNum = grabScale;
 const p = [];
-const particles = new Rectangle(0.25, 0, 0.5, 0.8);
+const particles = new Rectangle(0.05, 0, 0.25, 0.8);
+const particles2 = new Rectangle(0.7, 0, 0.25, 0.8);
 createParticle(p, particles);
+createParticle(p, particles2);
 const simLeft = particleSize;
 const simRight = 1 - particleSize;
 const simTop = 1 - particleSize;
@@ -214,15 +216,15 @@ let mouse = {
     isRightClick: false
 }
 
-output.innerHTML = "particleSize : " + particleSize + "<br>" +
-    "particleNum : " + (p.length) + "<br>" +
-    "canvasSize : " + canvasWidth + "<br>" +
-    "timeStepLength : " + timeDelta + "<br>" +
-    "iterationNum : " + iterationNum + "<br>" +
-    "restDensity : " + density0 + "<br>" +
-    "viscosity : " + viscosity + "<br>" +
-    "massParticle : " + massParticle + "<br>" +
-    "gravity : Vec2(x : " + grv.x + ", y : " + grv.y + ")";
+// output.innerHTML = "particleSize : " + particleSize + "<br>" +
+//     "particleNum : " + (p.length) + "<br>" +
+//     "canvasSize : " + canvasWidth + "<br>" +
+//     "timeStepLength : " + timeDelta + "<br>" +
+//     "iterationNum : " + iterationNum + "<br>" +
+//     "restDensity : " + density0 + "<br>" +
+//     "viscosity : " + viscosity + "<br>" +
+//     "massParticle : " + massParticle + "<br>" +
+//     "gravity : Vec2(x : " + grv.x + ", y : " + grv.y + ")";
 
 c.addEventListener("mousedown", function (e) {
     e.preventDefault();
