@@ -8,3 +8,6 @@ In creating this, I consulted the following [this sites](https://cattech-lab.com
 
 ## Demo(render by WebGL)
 [See Demo](https://gu215.github.io/Fluid_JS.github.io/DrawOnGPU/index.html)
+
+## Demo(with Jelly)
+[See Demo](https://gu215.github.io/Fluid_JS.github.io/withJelly/index.html)
