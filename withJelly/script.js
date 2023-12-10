@@ -1,9 +1,8 @@
 "use strict";
 const c = document.querySelector("canvas");
 const ctx = c.getContext("2d");
-const output = document.querySelector("p");
-const button = document.getElementById("button");
 
+// vector class
 class Vector {
     constructor(x = 0, y = 0) {
         this.x = x;
@@ -51,6 +50,7 @@ class Vector {
     // }
 }
 
+// particles
 class Particle {
     constructor(x = 0, y = 0) {
         this.position = new Vector(x, y);
@@ -101,6 +101,7 @@ class Particle {
     }
 }
 
+// spring for elastic body
 class Spring {
     constructor(p1, p2, length) {
         this.p1 = p1;
@@ -109,6 +110,7 @@ class Spring {
     }
 
     calcForce() {
+        // a = − (k ⁄ m) * x − (b ⁄ m) * v
         const sub = this.p1.position.subClone(this.p2.position);
         const length = sub.magnitude();
         const lx = (length - this.length) * (sub.x / length);
@@ -118,10 +120,10 @@ class Spring {
         this.p1.velocity2.y -= (ly * k + b * v.y) / (1);
         this.p2.velocity2.x += (lx * k + b * v.x) / (1);
         this.p2.velocity2.y += (ly * k + b * v.y) / (1);
-        // console.log(this.p1.force, this.p2.force);
     }
 }
 
+// cell for neighbor search
 class Cell {
     constructor(region, h) {
         this.h = h;
@@ -152,6 +154,7 @@ class Cell {
     }
 }
 
+// rect region
 class Rectangle {
     constructor(x, y, width, height) {
         this.width = width;
@@ -172,6 +175,7 @@ class Rectangle {
     }
 }
 
+// wPoly6 Kernel
 class Kernel {
     constructor(h) {
         this.h = h;
@@ -202,22 +206,20 @@ class Kernel {
     }
 }
 
-class ParticleGroup {
-    constructor(radius, density, viscosity) {
-        this.radius = radius || 0.025;
-        this.density = density || 1000;
-        this.viscosity = viscosity || 1;
-        this.particles = new Array();
-    }
-}
-
-
-
+// class ParticleGroup {
+//     constructor(radius, density, viscosity) {
+//         this.radius = radius || 0.025;
+//         this.density = density || 1000;
+//         this.viscosity = viscosity || 1;
+//         this.particles = new Array();
+//     }
+// }
 
 const gui = new lil.GUI();
 
+// set parameters
 const GUIControls = {
-    particleSize: 0.06,
+    particleSize: 0.025,
     stiffness: 100,
     density0: 1000,
     viscosity: 4,
@@ -227,15 +229,11 @@ const GUIControls = {
     isRun: true,
     reset: function () { reset() }
 }
-
 GUIControls.timeDelta = GUIControls.particleSize * 0.1;
-
 let cellSize = GUIControls.particleSize * 1.5;
 let massParticle = (GUIControls.particleSize ** 2) * GUIControls.density0;
 const w = new Kernel(cellSize);
 const grv = new Vector(0, 0 - GUIControls.grvForce);
-// const iterationNum = Math.floor((1 / 60) / timeDelta);
-
 let canvasWidth = window.innerWidth;
 let canvasHeight = window.innerHeight;
 c.width = canvasWidth;
@@ -252,7 +250,6 @@ let grabRange = GUIControls.grabScale * cell.h;
 let grabRange2 = grabRange * grabRange
 let range = GUIControls.grabScale * 2 + 1, loopNum = GUIControls.grabScale;
 let grabPower = 0.2 / grabRange;
-
 window.addEventListener("resize", function () {
     canvasWidth = window.innerWidth;
     canvasHeight = window.innerHeight;
@@ -272,23 +269,60 @@ window.addEventListener("resize", function () {
     range = GUIControls.grabScale * 2 + 1, loopNum = GUIControls.grabScale;
 })
 
-let p = [];
-let particles = new Rectangle(calcSpace.width * 0.05, 0, calcSpace.width * 0.3, 1);
-// let particles2 = new Rectangle(calcSpace.width * 0.7, 0, calcSpace.width * 0.3, 1);
-createParticle(p, particles);
-// createParticle(p, particles2);
-
-const k = 3.0;
+// k : spring constant, b : damping constant
+const k = 10.0;
 const b = 0.05;
-const springsId = [0, 5, 5, 10, 10, 15, 15, 20, 1, 6, 6, 11, 11, 16, 16, 21, 2, 7, 7, 12, 12, 17, 17, 22, 3, 8, 8, 13, 13, 18, 18, 23, 4, 9, 9, 14, 14, 19, 19, 24, 0, 1, 1, 2, 2, 3, 3, 4, 5, 6, 6, 7, 7, 8, 8, 9, 10, 11, 11, 12, 12, 13, 13, 14, 15, 16, 16, 17, 17, 18, 18, 19, 20, 21, 21, 22, 22, 23, 23, 24, 0, 6, 1, 7, 2, 8, 3, 9, 5, 11, 6, 12, 7, 13, 8, 14, 10, 16, 11, 17, 12, 18, 13, 19, 15, 21, 16, 22, 17, 23, 18, 24, 1, 5, 2, 6, 3, 7, 4, 8, 6, 10, 7, 11, 8, 12, 9, 13, 11, 15, 12, 16, 13, 17, 14, 18, 16, 20, 17, 21, 18, 22, 19, 23];
-const springs = [];
-for (let i = 0; i < 80; i += 2) {
-    console.log(springsId[i], springsId[i + 1]);
-    springs.push(new Spring(p[springsId[i]], p[springsId[i + 1]], GUIControls.particleSize));
-}
-for (let i = 80; i < springsId.length; i += 2) {
-    console.log(springsId[i], springsId[i + 1]);
-    springs.push(new Spring(p[springsId[i]], p[springsId[i + 1]], GUIControls.particleSize * Math.sqrt(2)));
+
+let p = [];
+let springs = [];
+let particles = new Rectangle(calcSpace.width * 0.05, 0, calcSpace.width * 0.4, 1.0);
+createElasticRect(p, particles);
+
+function createElasticRect(p, region) {
+    const nx = 30;
+    const ny = 30;
+    for (let i = 0; i < nx; i++) {
+        for (let j = 0; j < ny; j++) {
+            const x = region.left + (i + 0.5) * GUIControls.particleSize;
+            const y = region.bottom + (j + 0.5) * GUIControls.particleSize;
+
+            p.push(new Particle(x, y));
+        }
+    }
+    let springsIdHV = [];
+    let springsIdD = [];
+    // Vertical springsID
+    for (let i = 0; i < ny; i++) {
+        for (let j = 0; j < nx - 1; j++) {
+            springsIdHV.push(ny * j + i, ny * (j + 1) + i);
+        }
+    }
+    // Horizontal springsID
+    for (let i = 0; i < nx; i++) {
+        for (let j = 0; j < ny - 1; j++) {
+            springsIdHV.push(j + i * ny, j + 1 + i * ny);
+        }
+    }
+    // Diagonal springsID
+    for (let i = 0; i < nx - 1; i++) {
+        for (let j = 0; j < ny - 1; j++) {
+            springsIdD.push(j + i * ny, j + ny + 1 + i * ny);
+        }
+    }
+    for (let i = 0; i < nx - 1; i++) {
+        for (let j = 1; j < ny; j++) {
+            springsIdD.push(j + i * ny, j - 1 + ny + i * ny);
+        }
+    }
+
+    const sqrt2 = Math.sqrt(2);
+    // create springs
+    for (let i = 0, n = springsIdHV.length; i < n; i += 2) {
+        springs.push(new Spring(p[springsIdHV[i]], p[springsIdHV[i + 1]], GUIControls.particleSize));
+    }
+    for (let i = 0, n = springsIdD.length; i < n; i += 2) {
+        springs.push(new Spring(p[springsIdD[i]], p[springsIdD[i + 1]], GUIControls.particleSize * sqrt2));
+    }
 }
 
 GUIControls.particlesNum = String(p.length);
@@ -318,14 +352,8 @@ function setParam() {
     c.height = canvasHeight;
     calcSpace.init(0, 0, canvasWidth / canvasHeight, 1);
     p = [];
-    particles = new Rectangle(calcSpace.width * 0.05, 0, calcSpace.width * 0.3, 1);
-    // particles2 = new Rectangle(calcSpace.width * 0.7, 0, calcSpace.width * 0.3, 1);
-    createParticle(p, particles);
-    // createParticle(p, particles2);
-    const springs = [];
-    for (let i = 0; i < springsId.length; i += 2) {
-        springs.push(new Spring(p[springsId[i]], p[springsId[i + 1]], 0.01));
-    }
+    springs = [];
+    createElasticRect(p, particles);
 
     simLeft = GUIControls.particleSize;
     simRight = calcSpace.width - GUIControls.particleSize;
@@ -342,7 +370,10 @@ function setParam() {
     GUIControls.timeDelta = GUIControls.particleSize * 0.1;
     GUIControls.particlesNum = String(p.length);
 
-    console.log("reset")
+    grv.x = 0;
+    grv.y = 1;
+    grv.normalize();
+    grv.times(0 - GUIControls.grvForce);
 }
 
 let time = 0;
@@ -416,10 +447,8 @@ function mUp() {
 }
 
 function createParticle(p, region) {
-    // const nx = Math.round(region.width / GUIControls.particleSize);
-    // const ny = Math.round(region.height / GUIControls.particleSize);
-    const nx = 5;
-    const ny = 5;
+    const nx = Math.round(region.width / GUIControls.particleSize);
+    const ny = Math.round(region.height / GUIControls.particleSize);
     for (let i = 0; i < nx; i++) {
         for (let j = 0; j < ny; j++) {
             const x = region.left + (i + 0.5) * GUIControls.particleSize;
@@ -433,16 +462,13 @@ function createParticle(p, region) {
 function setParticleToCell() {
     cell.clear();
     cell.add(p);
-    // cell.add(pWall);
 }
 
+// calculate density
 function densityPressure() {
-    //密度を計算する
-    // 周囲と自分の密度が一定になるようにする 
     function calcDP(p) {
         for (let i = 0, n = p.length; i < n; i++) {
             //if (!p[i].active) continue;
-
             let density = 0;
             p[i].forNeighbor(cell, function (pNeighbor, rv) {
                 density += w.kernel(rv.magnitude()) * massParticle;
@@ -453,9 +479,9 @@ function densityPressure() {
     };
 
     calcDP(p);
-    // calcDP(pWall);
 }
 
+// calculate force
 function particleForce() {
     for (let i = 0, n = p.length; i < n; i++) {
         //if (!p[i].active) continue;
@@ -466,7 +492,7 @@ function particleForce() {
             if (p[i] !== pNeighbor) {
                 const r = rv.magnitude();
 
-                // 圧力項
+                // pressure
                 const wp = w.gradient(rv);
                 const fp = (0 - massParticle)
                     * (pNeighbor.pressure / (pNeighbor.density * pNeighbor.density)
@@ -474,7 +500,7 @@ function particleForce() {
                 force.x += wp.x * fp;
                 force.y += wp.y * fp;
 
-                // 粘性項
+                // viscosity
                 const dv = p[i].velocity.subClone(pNeighbor.velocity);
                 const fv = massParticle * 2 * GUIControls.viscosity / (pNeighbor.density * p[i].density) * rv.dot(wp) / (r * r + 0.01 * cellSize * cellSize);
                 force.x += fv * dv.x;
@@ -482,16 +508,17 @@ function particleForce() {
             }
         });
 
-        // 重力
+        // add gravity force
         force.x += grv.x;
         force.y += grv.y;
 
-        // 力の更新
+        // update force
         p[i].force.x = force.x;
         p[i].force.y = force.y;
     }
 }
 
+// update simulation
 function update(iterNum) {
     for (let j = 0; j < iterNum; j++) {
         time += GUIControls.timeDelta;
@@ -531,14 +558,16 @@ function update(iterNum) {
 function draw() {
     ctx.strokeStyle = "white";
     ctx.fillStyle = "blue";
-    
+
     function drawArc(p, scaleX, scaleY, d) {
         for (let i = 0, n = p.length; i < n; i++) {
             // if(!p[i].active) continue;
             const arcSize = d / 4;
             const x = (p[i].position.x - calcSpace.left) * scaleX;
             const y = canvasHeight - (p[i].position.y - calcSpace.bottom) * scaleY;
-            // ctx.fillStyle = "hsl(" + (220 - p[i].pressure / 100) + ", 80%, 40%)";
+            
+            // change particle color according to the particle's pressure
+            ctx.fillStyle = "hsl(" + (220 - p[i].pressure / 100) + ", 80%, 40%)";
             ctx.beginPath();
             ctx.arc(x, y, arcSize, 0, Math.PI * 2);
             ctx.fill();
@@ -546,24 +575,25 @@ function draw() {
         };
     };
 
-    
+
     const scaleX = canvasWidth / calcSpace.width;
     const scaleY = canvasHeight / calcSpace.height;
     const d = GUIControls.particleSize * scaleY;
-    
-    // ctx.fillStyle = "#00FFFF";
+
     drawArc(p, scaleX, scaleY, d);
-    
-    for (let i = 0, n = springs.length; i < n; i++) {
-        ctx.beginPath();
-        ctx.moveTo(springs[i].p1.position.x * scaleX, (1 - springs[i].p1.position.y) * scaleY);
-        ctx.lineTo(springs[i].p2.position.x * scaleX, (1 - springs[i].p2.position.y) * scaleY);
-        ctx.stroke();
-        ctx.closePath();
-    }
+
+    // Display Springs
+
+    // for (let i = 0, n = springs.length; i < n; i++) {
+    //     ctx.beginPath();
+    //     ctx.moveTo(springs[i].p1.position.x * scaleX, (1 - springs[i].p1.position.y) * scaleY);
+    //     ctx.lineTo(springs[i].p2.position.x * scaleX, (1 - springs[i].p2.position.y) * scaleY);
+    //     ctx.stroke();
+    //     ctx.closePath();
+    // }
 }
 
-
+// reset simulation
 function reset() {
     time = 0;
     setParam();
@@ -571,6 +601,7 @@ function reset() {
     draw();
 }
 
+// set up simulation
 function setup() {
     time = 0;
     ctx.clearRect(0, 0, c.width, c.height);
@@ -600,21 +631,22 @@ function grabParticles() {
     }
 }
 
-let ms = new Array(20);
 function render() {
 
     if (GUIControls.isRun) {
         stats.begin();
         ctx.clearRect(0, 0, c.width, c.height);
 
+        // 
         if (deviceMotion[0]) {
             grv.x = deviceMotion[1].x;
             grv.y = deviceMotion[1].y;
             grv.normalize();
             grv.times(0 - GUIControls.grvForce);
         }
-
+        // update simulation
         update(GUIControls.iterationNum);
+        // add force when you grab particles
         if (mouse.isPressed) {
             grabParticles();
 
@@ -629,6 +661,7 @@ function render() {
             ctx.stroke();
             ctx.closePath();
         }
+        // render
         draw();
 
         stats.end();
