@@ -12,8 +12,8 @@ body {
 
 canvas {
     aspect-ratio: 1 / 1;
-    width: 100vmin;
-    height: 100vmin;
+    width: 100vw;
+    height: 100vh;
     image-rendering: pixelated;
 }
 
