@@ -6,5 +6,5 @@ In creating this, I consulted the following [this sites](https://cattech-lab.com
 ## Demo
 [See Demo](https://gu215.github.io/Fluid_JS.github.io/DrawOnCPU/index.html)
 
-## Demo(with Jelly)
+## Demo(soft Body)
 [See Demo](https://gu215.github.io/Fluid_JS.github.io/withJelly/index.html)
